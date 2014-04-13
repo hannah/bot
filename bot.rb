@@ -46,36 +46,40 @@ class DoMath
 end
 =end
 
-class Bookmark
-  include Cinch::Plugin
-  match /bookmark (.+)/
+# class Bookmark
+#   include Cinch::Plugin
+#   match /bookmark (.+)/
 
-  def bookmark(query)
-    mark = query()
-    content = query.gsub(/(bookmark\s)/, '')
-  end
-end
+#   def bookmark(query)
+#     mark = query()
+#     content = query.gsub(/(bookmark\s)/, '')
+#   end
+# end
 
 bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "nothubot"
-    c.server = "sendak.freenode.net"
-    c.channels = ["#cinch-bots"]
+    c.server = "us.undernet.org"
+    c.channels = ["#asjdkjdslakgfadsfljds"]
     c.plugins.plugins = [Google]
     #c.plugins.plugins = [Wolfram]
   end
 
 
-  on :message, "hello" do |m|
+  on :message, ("hi") do |m|
     m.reply "Hello, #{m.user.nick}."
   end
 
   on :message, "die" do |m|
-    m.reply "I hate Hubot too, #{m.user.nick}."
+    m.reply "I hate everything too, #{m.user.nick}."
   end
 
   on :action, "kicks the bot" do |m|
     m.reply "Ouch! Stop kicking me :(", true
+  end
+
+  on :message, "ping" do |m|
+    m.reply "pong"
   end
 
 end
