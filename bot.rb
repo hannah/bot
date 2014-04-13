@@ -27,7 +27,7 @@ class Google
   end
 end
 
-=begin
+
 class DoMath
   include Cinch::Plugin
   match /calc (.+)/
@@ -44,7 +44,7 @@ class DoMath
     m.reply(calc(query))
   end
 end
-=end
+
 
 # class Bookmark
 #   include Cinch::Plugin
@@ -59,14 +59,13 @@ end
 bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "nothubot"
-    c.server = "us.undernet.org"
-    c.channels = ["#asjdkjdslakgfadsfljds"]
-    c.plugins.plugins = [Google]
-    #c.plugins.plugins = [Wolfram]
+    c.server = "chat.freenode.net"
+    c.channels = ["#femalefashionadvice"]
+    c.plugins.plugins = [Google, DoMath]
   end
 
 
-  on :message, ("hi") do |m|
+  on :message, "hi" do |m|
     m.reply "Hello, #{m.user.nick}."
   end
 
@@ -76,6 +75,10 @@ bot = Cinch::Bot.new do
 
   on :action, "kicks the bot" do |m|
     m.reply "Ouch! Stop kicking me :(", true
+  end
+
+  on :action, "whacks the bot with a wet trout" do |m|
+    m.action_reply "whacks #{m.user.nick} back with a whale"
   end
 
   on :message, "ping" do |m|
