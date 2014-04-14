@@ -79,7 +79,7 @@ bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "nothubot"
     c.server = "chat.freenode.net"
-    c.channels = ["#cinch-bots"]
+    c.channels = ["#femalefashionadvice"]
     c.plugins.plugins = [Google, DoMath, UrbanDictionary]
   end
 
@@ -102,6 +102,14 @@ bot = Cinch::Bot.new do
 
   on :message, "ping" do |m|
     m.reply "pong"
+  end
+
+  on :action, "hugs the bot" do |m|
+    m.action_reply "blushes and hugs #{m.user.nick} back"
+  end
+
+  on :message, /(alot)\b/ do |m|
+    m.reply "http://i.imgur.com/6dmTfHT.png"
   end
 
 end
