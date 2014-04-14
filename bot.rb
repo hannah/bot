@@ -79,7 +79,7 @@ bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "nothubot"
     c.server = "chat.freenode.net"
-    c.channels = ["#femalefashionadvice"]
+    c.channels = ["#cinch-bots"]
     c.plugins.plugins = [Google, DoMath, UrbanDictionary]
   end
 
