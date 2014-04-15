@@ -3,8 +3,6 @@ require 'open-uri'
 require 'nokogiri'
 require 'cgi'
 
-### Substitute values for YOUR_BOT_NAME and YOUR_SERVER_NAME
-
 class Google
   include Cinch::Plugin
   match /google (.+)/
@@ -27,15 +25,14 @@ class Google
   end
 end
 
-=begin
+
 class DoMath
   include Cinch::Plugin
   match /calc (.+)/
 
   def calc(query)
-    message = query[5..-1]
-    total = eval(message)
-    return total
+    total = eval(query)
+    total
   rescue
     "Please check your format"
   end
@@ -44,15 +41,13 @@ class DoMath
     m.reply(calc(query))
   end
 end
-=end
 
 bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "YOUR_BOT_NAME"
-    c.server = "YOUR_SERVER_NAME"
-    c.channels = ["#cinch-bots"]
-    c.plugins.plugins = [Google]
-    # c.plugins.plugins = [DoMath]
+    c.server = "YOUR_SERVER"
+    c.channels = ["#YOUR_CHANNEL"]
+    c.plugins.plugins = [Google, DoMath]
   end
 
   on :message, "hello" do |m|
