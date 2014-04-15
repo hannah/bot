@@ -25,6 +25,24 @@ class Google
   end
 end
 
+class UrbanDictionary
+  include Cinch::Plugin
+  match /ud (.+)/
+
+  def search(query)
+    url = "http://www.urbandictionary.com/define.php?term=#{CGI.escape(query)}"
+    result = Nokogiri::HTML(open(url)).at(".meaning")
+    meaning = result.text
+
+    CGI.unescape_html "#{meaning}"
+  rescue
+    "No results found"
+  end
+
+  def execute(m, query)
+    m.reply(search(query))
+  end
+end
 
 class DoMath
   include Cinch::Plugin
@@ -42,21 +60,52 @@ class DoMath
   end
 end
 
+# class Bookmark
+#   include Cinch::Plugin
+#   match /bookmark (.+)/
+
+#   def bookmark(query)
+#     mark = query()
+#     content = query.gsub(/(bookmark\s)/, '')
+#   end
+# end
+
 bot = Cinch::Bot.new do
   configure do |c|
-    c.nick = "YOUR_BOT_NAME"
-    c.server = "YOUR_SERVER"
-    c.channels = ["#YOUR_CHANNEL"]
-    c.plugins.plugins = [Google, DoMath]
+    c.nick = "nothubot"
+    c.server = "chat.freenode.net"
+    c.channels = ["#cinch-bots"]
+    c.plugins.plugins = [Google, DoMath, UrbanDictionary]
   end
 
-  on :message, "hello" do |m|
+  on :message, "hi" do |m|
     m.reply "Hello, #{m.user.nick}."
   end
 
   on :message, "die" do |m|
-    m.reply "I hate Hubot too, #{m.user.nick}."
+    m.reply "I hate everything too, #{m.user.nick}."
   end
+
+  on :action, "kicks the bot" do |m|
+    m.reply "Ouch! Stop kicking me :(", true
+  end
+
+  on :action, "whacks the bot with a wet trout" do |m|
+    m.action_reply "whacks #{m.user.nick} back with a whale"
+  end
+
+  on :message, "ping" do |m|
+    m.reply "pong"
+  end
+
+  on :action, "hugs the bot" do |m|
+    m.action_reply "blushes and hugs #{m.user.nick} back"
+  end
+
+  on :message, /(alot)\b/ do |m|
+    m.reply "http://i.imgur.com/6dmTfHT.png"
+  end
+
 end
 
 bot.start
