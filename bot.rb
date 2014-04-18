@@ -3,6 +3,7 @@ require 'open-uri'
 require 'nokogiri'
 require 'cgi'
 
+### Substitute values for YOUR_BOT_NAME and YOUR_SERVER_NAME
 class Google
   include Cinch::Plugin
   match /google (.+)/
@@ -72,8 +73,8 @@ end
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.nick = "nothubot"
-    c.server = "chat.freenode.net"
+    c.nick = "neonbot"
+    c.server = "dickson.freenode.net"
     c.channels = ["#cinch-bots"]
     c.plugins.plugins = [Google, DoMath, UrbanDictionary]
   end
@@ -102,7 +103,7 @@ bot = Cinch::Bot.new do
     m.action_reply "blushes and hugs #{m.user.nick} back"
   end
 
-  on :message, /(alot)\b/ do |m|
+  on :message, /\b(alot)\b/i do |m|
     m.reply "http://i.imgur.com/6dmTfHT.png"
   end
 
