@@ -116,7 +116,7 @@ class Memo
     if @memos.key?(m.user.nick) and @memos[m.user.nick].size > 0
       while @memos[m.user.nick].size > 0
         msg = @memos[m.user.nick].shift
-        m.reply msg
+        m.reply "#{m.user.nick}" + msg
       end
       @memos.delete m.user.nick
       update_store
@@ -152,7 +152,8 @@ class Memo
 
   def make_msg(nick, text, time)
     t = time.strftime("%Y-%m-%d")
-    "<#{nick}/#{t}> #{text}"
+    #{}"<#{nick}/#{t}> #{text}"
+    ":Note from #{nick} on #{t}: #{text}"
   end
 end
 
