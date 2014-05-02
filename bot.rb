@@ -2,6 +2,9 @@ require 'cinch'
 require 'open-uri'
 require 'nokogiri'
 require 'cgi'
+require 'wolfram-alpha'
+require 'yaml'
+
 
 ### Substitute values for YOUR_BOT_NAME and YOUR_SERVER_NAME
 class Google
@@ -60,6 +63,99 @@ class DoMath
     m.reply(calc(query))
   end
 end
+ 
+class Wolframsearch
+  include Cinch::Plugin
+  #plugin "wolfram"
+ 
+  match /wa (.+)/
+ 
+  def self.search(query)
+    url = "http://www.wolframalpha.com/input/?i=#{CGI.escape(query)}"
+    
+    # Get API key from
+    #          https://developer.wolframalpha.com/portal/signin.html
+    options = { "format" => "plaintext" } # see the reference appendix in the documentation.[1]w
+    client = WolframAlpha::Client.new "855858-G8QRY7HHWQ", options
+ 
+    query = client.query(query)
+    #if query.result
+      result = query.find { |pod| pod.title == "Result" } # Get the result pod
+      result = result.subpods[0].plaintext
+    #else
+     #"Sorry, I've no idea"
+    #end
+  rescue
+    url
+  end
+ 
+  def execute(m, query)
+    m.reply self.class.search(query), true #self.class.search
+  end
+end
+
+class Memo
+  include Cinch::Plugin
+
+  def initialize(*args)
+    super
+    if File.exist?('memos.yaml')
+      @memos = YAML.load_file('memos.yaml')
+    else
+      @memos = {}
+    end
+  end
+
+  #plugin "memo"
+  #help "!memo <name> <message> - Leave memos for other users"
+
+  listen_to :message
+  match /note (.+?) (.+)/
+
+  def listen(m)
+    if @memos.key?(m.user.nick) and @memos[m.user.nick].size > 0
+      while @memos[m.user.nick].size > 0
+        msg = @memos[m.user.nick].shift
+        m.reply "#{m.user.nick}" + msg
+      end
+      @memos.delete m.user.nick
+      update_store
+    end
+  end
+
+  def execute(m, nick, message)
+    if nick == m.user.nick
+      m.reply "You can't leave memos for yourself..."
+    elsif nick == bot.nick
+      m.reply "You can't leave memos for me..."
+    elsif @memos.key?(nick)
+      msg = make_msg(m.user.nick, message, Time.now)
+      @memos[nick] << msg
+      m.reply "Added note for #{nick}"
+      update_store
+    else
+      @memos[nick] ||= []
+      msg = make_msg(m.user.nick, message, Time.now)
+      @memos[nick] << msg
+      m.reply "Added note for #{nick}"
+      update_store
+    end
+  end
+
+  def update_store
+    synchronize(:update) do
+      File.open('memos.yaml', 'w') do |fh|
+        YAML.dump(@memos, fh)
+      end
+    end
+  end
+
+  def make_msg(nick, text, time)
+    t = time.strftime("%Y-%m-%d")
+    #{}"<#{nick}/#{t}> #{text}"
+    ":Note from #{nick} on #{t}: #{text}"
+  end
+end
 
 # class Bookmark
 #   include Cinch::Plugin
@@ -73,10 +169,10 @@ end
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.nick = "neonbot"
+    c.nick = "neonbot2"
     c.server = "dickson.freenode.net"
-    c.channels = ["#cinch-bots"]
-    c.plugins.plugins = [Google, DoMath, UrbanDictionary]
+    c.channels = ["#femalefashionadvice"]
+    c.plugins.plugins = [Google, DoMath, UrbanDictionary, Wolframsearch, Memo]
   end
 
   on :message, "hi" do |m|
