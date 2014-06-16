@@ -3,6 +3,7 @@ require 'open-uri'
 require 'nokogiri'
 require 'cgi'
 
+
 ### Substitute values for YOUR_BOT_NAME and YOUR_SERVER_NAME
 class Google
   include Cinch::Plugin
@@ -61,6 +62,26 @@ class DoMath
   end
 end
 
+class RandomCat
+  include Cinch::Plugin
+  match /cat/
+
+  def cat_generator
+    url = "http://thecatapi.com/api/images/get?format=src&type=gif"
+    # result = Nokogiri::HTML(open(url)).at("body")
+    returned_url = ""
+  open(url) do |resp|
+    returned_url = resp.base_uri.to_s
+  end
+  # rescue
+  #   "No cat found."
+  end
+
+  def execute(m)
+    m.reply(cat_generator)
+  end
+end
+
 # class Bookmark
 #   include Cinch::Plugin
 #   match /bookmark (.+)/
@@ -73,10 +94,10 @@ end
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.nick = "neonbot"
-    c.server = "dickson.freenode.net"
-    c.channels = ["#cinch-bots"]
-    c.plugins.plugins = [Google, DoMath, UrbanDictionary]
+    c.nick = "bestneonbot"
+    c.server = "hobana.freenode.net"
+    c.channels = ["#femalefashionadvice"]
+    c.plugins.plugins = [Google, DoMath, UrbanDictionary, RandomCat]
   end
 
   on :message, "hi" do |m|
