@@ -163,9 +163,8 @@ class RandomCat
   match /cat/
 
   def cat_generator
-    url = "http://thecatapi.com/api/images/get?format=src&type=gif"
-    # result = Nokogiri::HTML(open(url)).at("body")
-    returned_url = ""
+  url = "http://thecatapi.com/api/images/get?format=src&type=gif"
+  returned_url = ""
   open(url) do |resp|
     returned_url = resp.base_uri.to_s
   end
