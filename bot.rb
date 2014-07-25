@@ -35,17 +35,21 @@ class UrbanDictionary
   match /ud (.+)/
 
   def search(query)
-    url = "http://www.urbandictionary.com/define.php?term=#{CGI.escape(query)}"
-    result = Nokogiri::HTML(open(url)).at(".meaning")
-    meaning = result.text
+      url = "http://www.urbandictionary.com/define.php?term=#{CGI.escape(query)}"
+      result = Nokogiri::HTML(open(url)).at(".meaning")
+      meaning = result.text
 
-    CGI.unescape_html "#{meaning}"
+      CGI.unescape_html "#{meaning}"
   rescue
     "No results found"
   end
 
   def execute(m, query)
-    m.reply(search(query))
+    if query == 'noob'
+      m.reply "a person who is inexperienced in a particular sphere or activity, especially computing or the use of the Internet. SEE ALSO: #{m.user.nick}."
+    else
+      m.reply(search(query))
+    end
   end
 end
 
@@ -190,8 +194,8 @@ end
 bot = Cinch::Bot.new do
   configure do |c|
     c.nick = "bestneonbot"
-    c.server = "hobana.freenode.net"
-    c.channels = ["#femalefashionadvice"]
+    c.server = "kornbluth.freenode.net"
+    c.channels = ["#thisisabottestingchannel"]
     c.plugins.plugins = [Google, DoMath, UrbanDictionary, Wolframsearch, Memo, RandomCat]
   end
 
