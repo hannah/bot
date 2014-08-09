@@ -4,9 +4,42 @@ require 'nokogiri'
 require 'cgi'
 require 'wolfram-alpha'
 require 'yaml'
+require 'forecast_io'
+require 'geocoder'
+require 'net/http'
+require 'uri'
+
+# class Numeric
+
+#   def fahrenheit_to_celsius
+#     (self - 32) * 5 / 9
+#   end
+
+#   def celsius_to_fahrenheit
+#     self * 9 / 5 + 32
+#   end
+
+# end
 
 
 ### Substitute values for YOUR_BOT_NAME and YOUR_SERVER_NAME
+class Cat
+  include Cinch::Plugin
+  match /cat/
+
+  def execute(m)
+    response = Net::HTTP.get_response(URI('http://thecatapi.com/api/images/get?format=src&type=gif'))
+    if response.is_a?(Net::HTTPSuccess)
+      result = response.body
+    else
+      result = response['location']
+      #puts response['location']
+    end
+
+    m.reply "Here is a cat #{result}"
+  end
+end
+
 class Google
   include Cinch::Plugin
   match /google (.+)/
@@ -36,7 +69,7 @@ class UrbanDictionary
   def search(query)
     url = "http://www.urbandictionary.com/define.php?term=#{CGI.escape(query)}"
     result = Nokogiri::HTML(open(url)).at(".meaning")
-    meaning = result.text
+    meaning = result.text.split.slice(0, 30).join(" ")
 
     CGI.unescape_html "#{meaning}"
   rescue
@@ -44,7 +77,11 @@ class UrbanDictionary
   end
 
   def execute(m, query)
-    m.reply(search(query))
+    if query == 'noob'
+      m.reply "a person who is inexperienced in a particular sphere or activity, especially computing or the use of the Internet. SEE ALSO: #{m.user.nick}."
+    else
+      m.reply(search(query))
+    end
   end
 end
 
@@ -99,10 +136,12 @@ class Memo
 
   def initialize(*args)
     super
-    if File.exist?('memos.yaml')
+    if File.exist?('memos.yaml') #or File.exist?('privmemos.yaml')
       @memos = YAML.load_file('memos.yaml')
+      #@privmemos = YAML.load_file('privmemos.yaml')
     else
       @memos = {}
+      #@privmemos = {}
     end
   end
 
@@ -111,35 +150,64 @@ class Memo
 
   listen_to :message
   match /note (.+?) (.+)/
+  
 
   def listen(m)
-    if @memos.key?(m.user.nick) and @memos[m.user.nick].size > 0
-      while @memos[m.user.nick].size > 0
-        msg = @memos[m.user.nick].shift
+    if @memos.key?(m.user.nick.downcase) and @memos[m.user.nick.downcase].size > 0
+      while @memos[m.user.nick.downcase].size > 0
+        msg = @memos[m.user.nick.downcase].shift
         m.reply "#{m.user.nick}" + msg
       end
-      @memos.delete m.user.nick
+      @memos.delete m.user.nick.downcase
       update_store
     end
+    # if @privmemos.key?(m.user.nick) and @privmemos[m.user.nick].size > 0
+    #   while @privmemos[m.user.nick].size > 0
+    #     privmsg = @privmemos[m.user.nick].shift
+    #     User(m.user.nick).send(privmsg)
+    #   end
+    #   @privmemos.delete m.user.nick
+    #   update_store
+    # end
   end
 
   def execute(m, nick, message)
-    if nick == m.user.nick
-      m.reply "You can't leave memos for yourself..."
-    elsif nick == bot.nick
-      m.reply "You can't leave memos for me..."
-    elsif @memos.key?(nick)
-      msg = make_msg(m.user.nick, message, Time.now)
-      @memos[nick] << msg
-      m.reply "Added note for #{nick}"
-      update_store
-    else
-      @memos[nick] ||= []
-      msg = make_msg(m.user.nick, message, Time.now)
-      @memos[nick] << msg
-      m.reply "Added note for #{nick}"
-      update_store
-    end
+    #if m.include?("note")
+      if nick == m.user.nick
+        m.reply "You can't leave memos for yourself..."
+      elsif nick == bot.nick
+        m.reply "You can't leave memos for me..."
+      elsif @memos.key?(nick)
+        msg = make_msg(m.user.nick.downcase, message, Time.now)
+        @memos[nick.downcase] << msg
+        m.reply "Added note for #{nick}"
+        update_store
+      else
+        @memos[nick.downcase] ||= []
+        msg = make_msg(m.user.nick.downcase, message, Time.now)
+        @memos[nick.downcase] << msg
+        m.reply "Added note for #{nick}"
+        update_store
+      end
+
+    # else 
+    #   if nick == m.user.nick
+    #     m.reply "You can't leave memos for yourself..."
+    #   elsif nick == bot.nick
+    #     m.reply "You can't leave memos for me..."
+    #   elsif @privmemos.key?(nick)
+    #     msg = make_msg(m.user.nick, message, Time.now)
+    #     @privmemos[nick] << msg
+    #     m.reply "Added privnote for #{nick}"
+    #     update_store
+    #   else
+    #     @privmemos[nick] ||= []
+    #     msg = make_msg(m.user.nick, message, Time.now)
+    #     @privmemos[nick] << msg
+    #     m.reply "Added privnote for #{nick}"
+    #     update_store
+    #   end
+     
   end
 
   def update_store
@@ -147,6 +215,9 @@ class Memo
       File.open('memos.yaml', 'w') do |fh|
         YAML.dump(@memos, fh)
       end
+      # File.open('privmemos.yaml', 'w') do |fh|
+      #   YAML.dump(@privmemos,fh)
+      # end
     end
   end
 
@@ -157,9 +228,50 @@ class Memo
   end
 end
 
+class Weather
+
+  include Cinch::Plugin
+    match /wea (.+)/
+    #match /forecast (.+)/
+
+    #use geocoder to grab longitude and latitude 
+
+  def location(query)
+
+    def celsius_to_fahrenheit(celsius)
+      celsius * 9 / 5 + 32
+    end
+    ForecastIO.api_key = "3c15954606092982f23336badca3586b"
+
+    location = Geocoder.search(query)
+    address = location[0].data["formatted_address"]
+    location = location[0].data["geometry"]["location"].flatten
+    #if address.match('USA') 
+    #  units = "F"
+    #end
+
+    weather = ForecastIO.forecast(location[1],location[3],params: { units: "si" })
+   
+    current_temp = weather.currently.temperature.round
+    current = weather.currently.summary
+    tomorrow = weather.daily.data[1].summary
+    tomorrow_lowtemp = weather.daily.data[1].temperatureMin.round
+    tomorrow_hightemp = weather.daily.data[1].temperatureMax.round
+    address + ": Now: #{current}, #{current_temp}°C" + " (#{celsius_to_fahrenheit(current_temp.to_i)}°F)" + " Tomorrow: #{tomorrow} #{tomorrow_lowtemp}-#{tomorrow_hightemp}°C" + " (#{celsius_to_fahrenheit(tomorrow_lowtemp.to_i)}-#{celsius_to_fahrenheit(tomorrow_hightemp.to_i)}°F)" 
+  rescue
+    "You're silly, try again"
+  end
+
+  def execute(m, query)
+    m.reply location(query)
+  end
+
+end
+
 # class Bookmark
 #   include Cinch::Plugin
 #   match /bookmark (.+)/
+#   match /(.+)/
 
 #   def bookmark(query)
 #     mark = query()
@@ -172,7 +284,8 @@ bot = Cinch::Bot.new do
     c.nick = "neonbot2"
     c.server = "dickson.freenode.net"
     c.channels = ["#femalefashionadvice"]
-    c.plugins.plugins = [Google, DoMath, UrbanDictionary, Wolframsearch, Memo]
+    #c.channels = ["#ffatest"]
+    c.plugins.plugins = [Google, DoMath, UrbanDictionary, Wolframsearch, Memo, Weather, Cat]
   end
 
   on :message, "hi" do |m|
