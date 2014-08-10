@@ -164,7 +164,7 @@ end
 
 class RandomCat
   include Cinch::Plugin
-  match /cat/
+  match /cat\b/
 
   def cat_generator
   url = "http://thecatapi.com/api/images/get?format=src&type=gif"
@@ -181,15 +181,17 @@ class RandomCat
   end
 end
 
-# class Bookmark
-#   include Cinch::Plugin
-#   match /bookmark (.+)/
+class Bookmark
+  include Cinch::Plugin
+  match ^/(?!ignoreme|ignoreme2|ignoremeN)([a-z0-9]+)$/
 
-#   def bookmark(query)
-#     mark = query()
-#     content = query.gsub(/(bookmark\s)/, '')
-#   end
-# end
+  def bookmark(query)
+    query
+  end
+
+  def execute(m)
+  end
+end
 
 bot = Cinch::Bot.new do
   configure do |c|
